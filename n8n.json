@@ -1,0 +1,112 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-observation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -352
+      ],
+      "id": "e68dbc40-0d19-4e39-85d0-87ea727718d4",
+      "webhookId": "2d6e823f-c171-4053-bab8-241734380ac5"
+    },
+    {
+      "parameters": {
+        "functionCode": "const report = items[0].json.report;\n\nreturn [\n  {\n    json: {\n      response: report.report_text,\n      form_data: report.form_data\n    }\n  }\n];\n"
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -352
+      ],
+      "id": "750deba0-55ad-4d42-a0f7-3f1994843374"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -352
+      ],
+      "id": "6b0fb151-65ba-40ea-920f-1f76138e248f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"observation\": \"{{$json.body.observation}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        -352
+      ],
+      "id": "e58432d2-6146-4db8-b85d-9d717c29fb5f",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "11abea84-4e25-44eb-85fa-bf3b65a1f80c",
+  "meta": {
+    "instanceId": "699068ae433647dff712a2c33b6e4c0fa8255c19d2471c035ba09f82615ddc9b"
+  },
+  "id": "DfrFMPLmcF1lgMv8",
+  "tags": []
+}
