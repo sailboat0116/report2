@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>診斷報告結果</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 8px; }
+        button { padding: 10px 20px; margin-top: 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<h2>診斷報告結果</h2>
+<pre id="report"></pre>
+
+<h3>結構化資料（Form Data）</h3>
+<pre id="formData"></pre>
+
+<button id="nextPageBtn">下一頁 ➜ 自動填表</button>
+
+<script>
+    // 顯示資料
+    const storedData = localStorage.getItem("generatedReport");
+    const reportText = localStorage.getItem("reportText");
+
+    if (storedData) {
+        try {
+            const parsedData = JSON.parse(storedData);
+            document.getElementById("formData").innerText = JSON.stringify(parsedData, null, 2);
+        } catch (e) {
+            document.getElementById("formData").innerText = "⚠️ JSON 資料解析錯誤";
+        }
+    } else {
+        document.getElementById("formData").innerText = "⚠️ 沒有可用的資料";
+    }
+
+    document.getElementById("report").innerText = reportText || "尚無報告內容";
+
+    // 下一頁按鈕邏輯
+    document.getElementById("nextPageBtn").addEventListener("click", () => {
+        try {
+            const parsedData = JSON.parse(document.getElementById("formData").innerText);
+            localStorage.setItem("generatedReport", JSON.stringify(parsedData));
+            window.location.href = "index.html";
+        } catch (e) {
+            alert("❌ 無法儲存資料，請確認格式是否正確！");
+        }
+    });
+</script>
+
+</body>
+</html>

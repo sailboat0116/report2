@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lung Cancer Report Form</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="container">
+  <h2>Imaging Report Form for the Lung Cancer</h2>
+
+  <!-- 1. Imaging Date -->
+  <label for="date">1. Imaging Date:</label>
+  <input type="date" id="date" name="date" />
+
+  <!-- 2. Imaging Modality -->
+  <fieldset>
+    <legend>Imaging Modality:</legend>
+    <label><input type="checkbox" name="modality" /> CT scan</label><br/>
+    <label><input type="checkbox" name="modality" /> MRI</label>
+  </fieldset>
+
+  <!-- 3. Tumor Location/Size -->
+  <fieldset>
+    <legend>2. Tumor Location / Size</legend>
+    <label>Location:</label><br/>
+    <label><input type="checkbox" name="location" /> Right upper lobe</label>
+    <label><input type="checkbox" name="location" /> Right middle lobe</label>
+    <label><input type="checkbox" name="location" /> Right lower lobe</label><br/>
+    <label><input type="checkbox" name="location" /> Left upper lobe</label>
+    <label><input type="checkbox" name="location" /> Left lower lobe</label>
+    <label><input type="text" placeholder="Other" /></label><br/><br/>
+
+    <label>Size:</label>
+    <label><input type="radio" name="size" /> Non-measurable</label>
+    <label><input type="radio" name="size" /> Measurable: <input type="text" placeholder="cm (greatest dimension)" /></label>
+  </fieldset>
+
+  <!-- 4. Tumor Invasion -->
+  <fieldset>
+    <legend>3. Tumor Invasion (T Classification)</legend>
+    <label><input type="checkbox" name="T" /> Tx: Primary tumor cannot be assessed</label><br/>
+    <label><input type="checkbox" name="T" /> T0: No evidence of primary tumor</label><br/>
+    <label><input type="checkbox" name="T" /> Tis: Carcinoma in situ</label><br/>
+
+    <strong>T1:</strong><br/>
+    <label><input type="checkbox" name="T" /> T1mi: Minimally invasive adenocarcinoma (≤3cm with ≤5mm invasion)</label><br/>
+    <label><input type="checkbox" name="T" /> T1a: Tumor ≤1cm or any size limited to the bronchial wall</label><br/>
+    <label><input type="checkbox" name="T" /> T1b: Tumor >1cm but ≤2cm</label><br/>
+    <label><input type="checkbox" name="T" /> T1c: Tumor >2cm but ≤3cm</label><br/>
+
+    <strong>T2:</strong><br/>
+    <label><input type="checkbox" name="T" /> T2a: Tumor >3cm but ≤4cm, or involves visceral pleura, an adjacent lobe, or involves main bronchus (not includeing carina), or causes atelectas/pneumonitis extending to hilar region</label><br/>
+    <label><input type="checkbox" name="T" /> T2b: Tumor >4cm but ≤5cm, with similar features as T2a</label><br/>
+
+    <strong>T3:</strong><br/>
+    <label><input type="checkbox" name="T" /> Tumor >5cm but ≤7cm</label><br/>
+    <label><input type="checkbox" name="T" /> Invades parietal pleura, chest wall, phrenic nerve, pericardium, azygos vein, thoracic nerve roots (T1, T2), or stellate ganglion</label><br/>
+    <label><input type="checkbox" name="T" /> Separate tumor nodule(s) in the same lobe</label><br/>
+
+    <strong>T4:</strong><br/>
+    <label><input type="checkbox" name="T" /> Tumor >7cm</label><br/>
+    <label><input type="checkbox" name="T" /> Invades mediastinum, thymus, trachea, carina, recurrent laryngeal nerve, vagus nerve, esophagus, diaphragm, heart, great vessels, vertebral body, spinal canal, cervical nerve roots, or brachial plexus</label><br/>
+    <label><input type="checkbox" name="T" /> Separate tumor nodule(s) in a different ipsilateral lobe</label><br/>
+  </fieldset>
+
+  <!-- 5. Lymph Node -->
+  <fieldset>
+    <legend>4. Regional Lymph Nodal involvement (N Classification)</legend>
+    <label><input type="checkbox" name="N" /> NX: Regional lymph nodes cannot be assessed</label><br/>
+    <label><input type="checkbox" name="N" /> N0: No tumor involvement of regional lymph node</label><br/>
+    <label><input type="checkbox" name="N" /> N1: Tumor involvement of ipsilateral peribronchial, hilar, or intrapulmonary lymph nodes</label><br/>
+    <label><input type="checkbox" name="N" /> N2: Tumor involvement of ipsilateral mediastinal or subcarinal lymph nodes</label><br/>
+    <label><input type="checkbox" name="N" /> N2a: Single N2 station involvement</label><br/>
+    <label><input type="checkbox" name="N" /> N2b: Multiple N2 station involvement</label><br/>
+    <label><input type="checkbox" name="N" /> N3: Contralateral mediastinal, hilar, supraclavicular, or scalene lymph nodes</label>
+  </fieldset>
+
+  <!-- 6. Distant Metastasis -->
+  <fieldset>
+    <legend>5. Distant Metastasis (M Classification)</legend>
+    <label><input type="checkbox" name="M" /> M0: No distant metastasis</label><br/>
+    <label><input type="checkbox" name="M" /> M1: Distant metastasis</label><br/>
+    <div style="margin-left: 20px;">
+      <label><input type="checkbox" name="M1" /> M1a: Metastasis in pleural/pericardial nodules, malignant pleural/pericadial effusion, or separate tumor nodule(s) in contralateral lobe</label><br/>
+      <label><input type="checkbox" name="M1" /> M1b: Single extrathoracic metastasis in a single organ system</label><br/>
+      <label><input type="checkbox" name="M1" /> M1c: Multiple extrathoracic metastases</label><br/>
+      <label><input type="checkbox" name="M1" /> M1c1: Metastases in a single organ system</label><br/>
+      <label><input type="checkbox" name="M1" /> M1c2: Metastases in multiple organ systems</label>
+    </div>
+  </fieldset>
+
+  <!-- 7. Other Findings -->
+  <fieldset>
+    <legend>6. Other Findings</legend>
+    <textarea rows="3" cols="60" placeholder="Enter other findings here..."></textarea>
+  </fieldset>
+
+  <!-- 8. IMP -->
+  <div class="imp-block">
+    <label for="imp"><strong>IMP:</strong></label>
+    <div class="imp-text">
+      Lung cancer, preliminary imaging staging T
+      <input type="text" class="small-input" maxlength="2" />
+      N
+      <input type="text" class="small-input" maxlength="2" />
+      M
+      <input type="text" class="small-input" maxlength="2" />
+      (AJCC 9th edition)
+    </div>
+  </div>
+
+  <!-- 側邊按鈕 -->
+  <div class="side-buttons">
+    <button type="button">儲存</button>
+    <button type="button">離開</button>
+  </div>
+
+</div>
+<script src="index.js"></script>
+</body>
+
+</html>

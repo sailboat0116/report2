@@ -1,0 +1,139 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    padding: 30px;
+}
+
+.container {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    max-width: 800px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin: 5px 0;
+}
+
+input[type="text"],
+input[type="date"] {
+    margin-left: 10px;
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+fieldset {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+legend {
+    font-weight: bold;
+    padding: 0 5px;
+}
+
+textarea {
+    width: 100%;
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+.imp-block {
+    margin-top: 20px;
+}
+
+.imp-text {
+    border-top: 1px solid #666;
+    padding-top: 5px;
+    margin-top: 5px;
+    color: #555;
+    font-size: 16px;
+}
+
+.small-input {
+    width: 40px;
+    margin: 0 5px;
+    padding: 4px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 設定整體容器與字體 */
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    background-color: #fdfdf8; /* 可選，圖片中略帶淡黃色背景 */
+    padding: 40px;
+    line-height: 1.6;
+}
+
+/* 容器樣式 */
+.container {
+    max-width: 1000px;
+    margin: auto;
+}
+
+/* 標題 */
+h2 {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* 小文字輸入欄寬度設定 */
+.small-input {
+    width: 30px;
+}
+
+/* IMP 區塊 */
+.imp-block {
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.imp-text {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* ✅ 側邊按鈕容器：固定在畫面右側，會隨滾動移動 */
+.side-buttons {
+    position: fixed;
+    top: 150px; /* 從畫面頂部下來一點 */
+    right: 40px; /* 靠右邊 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 999; /* 確保在最上層 */
+}
+
+/* ✅ 按鈕樣式 */
+.side-buttons button {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    padding: 10px 24px;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    background-color: #e8f0fa;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.side-buttons button:hover {
+    background-color: #cce0f5;
+}

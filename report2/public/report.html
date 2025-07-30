@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>肺部診斷生成系統</title>
+</head>
+<body>
+<h2>肺部影像觀察輸入</h2>
+<form id="reportForm">
+  <label for="observation">請輸入觀察內容：</label><br>
+  <textarea id="observation" name="observation" rows="5" cols="50" placeholder="例如：右上肺葉發現 45mm 結節，與主動脈相近..."></textarea><br><br>
+  <button type="submit">產生診斷報告</button>
+</form>
+
+<h3>診斷結果：</h3>
+<pre id="result"></pre>
+<script src="report.js"></script>
+</body>
+
+</html>
