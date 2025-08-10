@@ -3,9 +3,16 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     const obs = document.getElementById("observation").value;
 
     try {
+        // 假設 token 已經存在 localStorage
+        const token = localStorage.getItem('token');
+
         const response = await fetch("http://localhost:5678/webhook-test/send-observation", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                // 帶上 Bearer token
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify({ observation: obs })
         });
 
@@ -25,7 +32,6 @@ document.getElementById("reportForm").addEventListener("submit", async function 
             };
             localStorage.setItem("generatedReport", JSON.stringify(formDataToSave));
 
-            // ✅ 改為絕對路徑
             setTimeout(() => {
                 window.location.href = "/response.html";
             }, 2000);

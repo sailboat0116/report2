@@ -129,11 +129,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Saved JSON:", result);
 
         // 1. 送到你自己的 Express 伺服器（port 3001）
+        const token = localStorage.getItem('token');
         fetch("http://localhost:3001/save-result", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify(result)
         })
+
             .then(res => res.json())
             .then(data => {
                 console.log("存檔結果：", data);
