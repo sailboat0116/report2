@@ -72,3 +72,82 @@ window.addEventListener("DOMContentLoaded", () => {
         otherFindings.value = report.other_findings;
     }
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelector("button").addEventListener("click", () => {
+        // Tumor location
+        const locationCheckboxes = document.querySelectorAll("input[name='location']:checked");
+        const tumorLocation = Array.from(locationCheckboxes).map(cb => cb.parentElement.textContent.trim());
+
+        // Tumor size
+        let tumorSizeCm = "";
+        const sizeRadios = document.querySelectorAll("input[name='size']");
+        sizeRadios.forEach(radio => {
+            if (radio.checked) {
+                const nextInput = radio.parentElement.querySelector("input[type='text']");
+                tumorSizeCm = nextInput ? nextInput.value : radio.parentElement.textContent.trim();
+            }
+        });
+
+        // T stage
+        const tStageCheckboxes = document.querySelectorAll("input[name='T']:checked");
+        const tStage = Array.from(tStageCheckboxes).map(cb => cb.parentElement.textContent.trim());
+
+        // N stage
+        const nStageCheckboxes = document.querySelectorAll("input[name='N']:checked");
+        const nStage = Array.from(nStageCheckboxes).map(cb => cb.parentElement.textContent.trim());
+
+        // M stage
+        const mStageCheckboxes = document.querySelectorAll("input[name='M']:checked, input[name='M1']:checked");
+        const mStage = Array.from(mStageCheckboxes).map(cb => cb.parentElement.textContent.trim());
+
+        // Other findings
+        const otherFindings = document.querySelector("fieldset textarea")?.value || "";
+
+        // IMP
+        const impInputs = document.querySelectorAll(".imp-text input");
+        const imp = {
+            T: impInputs[0]?.value || "",
+            N: impInputs[1]?.value || "",
+            M: impInputs[2]?.value || ""
+        };
+
+        // Lung-RADS Category（如果你未來要加這欄，這裡先預留）
+        const lungRadsCategory = ""; // 預設空字串
+
+        const result = {
+            tumor_location: tumorLocation.join(", "),
+            tumor_size_cm: tumorSizeCm,
+            T_stage: tStage.join(", "),
+            N_stage: nStage.join(", "),
+            M_stage: mStage.join(", "),
+            lung_rads_category: lungRadsCategory,
+            other_findings: otherFindings,
+            imp: imp
+        };
+
+        console.log("Saved JSON:", result);
+
+        fetch('http://localhost:5678/webhook-test/lung-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(result)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json(); // 如果 n8n 有回傳 JSON 的話
+            })
+            .then(data => {
+                console.log('成功傳送至 n8n:', data);
+            })
+            .catch(error => {
+                console.error('傳送失敗:', error);
+            });
+
+    });
+});
