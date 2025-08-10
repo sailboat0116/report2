@@ -16,7 +16,7 @@ const usersRouter = require('./routes/users');
 const app = express();
 
 // 加入 CORS 中間件，允許所有來源跨域
-//app.use(cors());
+/*app.use(cors());*/
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
