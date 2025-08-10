@@ -4,7 +4,11 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const fs = require("fs");
+var dotenv = require('dotenv');
+var mysql = require('mysql2/promise');
 const cors = require("cors");
+
+dotenv.config();
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -22,6 +26,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(cors());
 
 // 靜態檔案目錄
 app.use(express.static(path.join(__dirname, 'public')));
@@ -42,6 +47,56 @@ app.post("/save-result", (req, res) => {
     }
     res.json({ status: "ok", path: filePath });
   });
+});
+
+// ===== MySQL 連線池 =====
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+});
+
+// ===== 登入 API =====
+app.post('/api/login', async (req, res) => {
+  try {
+    const { doctorId, password } = req.body || {};
+    if (!doctorId || !password) {
+      return res.status(400).json({ ok: false, msg: '缺少帳號或密碼' });
+    }
+
+    const sql = `
+      SELECT id, login_id, display_name, role
+      FROM doctors
+      WHERE login_id = ?
+        AND password_hash = SHA2(?, 256)
+        AND is_active = 1
+      LIMIT 1
+    `;
+    const [rows] = await pool.query(sql, [doctorId, password]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ ok: false, msg: '帳號或密碼錯誤' });
+    }
+
+    const u = rows[0];
+    res.json({
+      ok: true,
+      user: {
+        id: u.id,
+        loginId: u.login_id,
+        name: u.display_name || u.login_id,
+        role: u.role,
+      },
+      token: 'demo-token',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, msg: '伺服器錯誤' });
+  }
 });
 
 // catch 404 and forward to error handler
