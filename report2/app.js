@@ -5,6 +5,10 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const fs = require("fs");
 const cors = require("cors");
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -29,10 +33,88 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// 儲存報告 API
-app.post("/save-result", (req, res) => {
-  const result = req.body;
 
+
+// JWT 密鑰 (記得改成安全字串)
+const SECRET_KEY = 'dennis';
+
+// 建立 SQLite DB（可調整路徑）
+const db = new sqlite3.Database('./users.db', (err) => {
+  if (err) {
+    console.error('無法連接資料庫:', err.message);
+  } else {
+    console.log('已連接 SQLite 資料庫');
+  }
+});
+
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password_hash TEXT
+  )`);
+});
+
+// 登入
+app.post('/login_interface', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: '請輸入帳號密碼' });
+
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) return res.status(500).json({ error: '資料庫錯誤' });
+    if (!user) return res.status(400).json({ error: '帳號不存在' });
+
+    bcrypt.compare(password, user.password_hash, (err, result) => {
+      if (err) return res.status(500).json({ error: '密碼比對錯誤' });
+      if (!result) return res.status(400).json({ error: '密碼錯誤' });
+
+      // 密碼正確，簽發 JWT
+      const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '2h' });
+      res.json({ token });
+    });
+  });
+});
+
+// 註冊
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: '請輸入帳號密碼' });
+
+  bcrypt.hash(password, 10, (err, hash) => {
+    if (err) return res.status(500).json({ error: '密碼加密錯誤' });
+
+    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
+    stmt.run(username, hash, function(err) {
+      if (err) {
+        if (err.message.includes('UNIQUE')) {
+          return res.status(400).json({ error: '帳號已存在' });
+        }
+        return res.status(500).json({ error: '資料庫錯誤' });
+      }
+      res.json({ message: '註冊成功' });
+    });
+    stmt.finalize();
+  });
+});
+
+// JWT 驗證中間件
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ error: '缺少授權Token' });
+
+  const token = authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: '缺少Token' });
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token 無效或過期' });
+    req.user = user; // 解析後的用戶資訊
+    next();
+  });
+}
+
+// 使用範例：保護 /save-result 路由
+app.post('/save-result', authenticateToken, (req, res) => {
+  const result = req.body;
   const filePath = path.join("C:", "Users", "sailboat", "Desktop", "result.txt");
 
   fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
