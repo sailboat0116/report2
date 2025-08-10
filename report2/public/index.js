@@ -73,7 +73,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("button").addEventListener("click", () => {
         // Tumor location
@@ -113,8 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
             M: impInputs[2]?.value || ""
         };
 
-        // Lung-RADS Category（如果你未來要加這欄，這裡先預留）
-        const lungRadsCategory = ""; // 預設空字串
+        // Lung-RADS Category
+        const lungRadsCategory = "";
 
         const result = {
             tumor_location: tumorLocation.join(", "),
@@ -129,6 +128,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         console.log("Saved JSON:", result);
 
+        // 1. 送到你自己的 Express 伺服器（port 3001）
+        fetch("http://localhost:3001/save-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result)
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log("存檔結果：", data);
+            })
+            .catch(err => {
+                console.error("存檔失敗：", err);
+            });
+
+        // 2. 送到 n8n webhook（port 5678）
         fetch('http://localhost:5678/webhook-test/lung-report', {
             method: 'POST',
             headers: {
@@ -140,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                return response.json(); // 如果 n8n 有回傳 JSON 的話
+                return response.json();
             })
             .then(data => {
                 console.log('成功傳送至 n8n:', data);
@@ -148,6 +162,5 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(error => {
                 console.error('傳送失敗:', error);
             });
-
     });
 });
