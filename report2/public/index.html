@@ -10,6 +10,20 @@
 <div class="container">
   <h2>Imaging Report Form for the Lung Cancer</h2>
 
+  <!-- 病歷編號 -->
+  <label for="recordId">病歷編號:</label>
+  <input type="text" id="recordId" name="recordId" placeholder="輸入病歷編號" />
+
+  <!-- 患者姓名 -->
+  <label for="patientName">患者姓名:</label>
+  <input type="text" id="patientName" name="patientName" placeholder="輸入患者姓名" />
+
+  <!-- 患者資料 -->
+  <fieldset>
+    <legend>患者資料</legend>
+    <textarea id="patientInfo" name="patientInfo" rows="3" cols="60" placeholder="輸入患者基本資料，例如年齡、性別、病史等"></textarea>
+  </fieldset>
+
   <!-- 1. Imaging Date -->
   <label for="date">1. Imaging Date:</label>
   <input type="date" id="date" name="date" />
@@ -113,12 +127,11 @@
 
   <!-- 側邊按鈕 -->
   <div class="side-buttons">
-    <button type="button">儲存</button>
+    <button id="saveBtn" type="button">儲存</button>
     <button type="button">離開</button>
   </div>
 
 </div>
 <script src="index.js"></script>
 </body>
-
 </html>

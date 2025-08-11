@@ -137,3 +137,33 @@ h2 {
 .side-buttons button:hover {
     background-color: #cce0f5;
 }
+
+
+/* 讓病歷編號、患者姓名、患者資料之間留空間 */
+label {
+    display: block;
+    margin-top: 15px; /* 每個欄位上方留距 */
+    font-weight: bold;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    max-width: 500px; /* 控制最大寬度，避免過長 */
+    padding: 8px;
+    margin-top: 5px; /* 輸入框與標籤間距 */
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+}
+
+fieldset {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
