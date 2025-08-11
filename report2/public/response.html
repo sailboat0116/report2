@@ -7,11 +7,17 @@
         body { font-family: Arial, sans-serif; padding: 20px; }
         pre { background: #f4f4f4; padding: 15px; border-radius: 8px; }
         button { padding: 10px 20px; margin-top: 20px; font-size: 16px; }
+        #logoutBtn { margin-left: 10px; background-color: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #logoutBtn:hover { background-color: #c0392b; }
     </style>
 </head>
 <body>
 
 <h2>診斷報告結果</h2>
+
+<!-- 登出按鈕 -->
+<button id="logoutBtn" type="button">登出</button>
+
 <pre id="report"></pre>
 
 <h3>結構化資料（Form Data）</h3>
@@ -45,6 +51,14 @@
             window.location.href = "index.html";
         } catch (e) {
             alert("❌ 無法儲存資料，請確認格式是否正確！");
+        }
+    });
+
+    // 安全版登出功能
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        if (confirm('確定要登出嗎？')) {
+            localStorage.removeItem('doctorAuth'); // 清除登入資訊
+            window.location.href = 'login.html';   // 跳轉回登入頁
         }
     });
 </script>

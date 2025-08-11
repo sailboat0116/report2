@@ -129,9 +129,19 @@
   <div class="side-buttons">
     <button id="saveBtn" type="button">儲存</button>
     <button type="button">離開</button>
+    <button id="logoutBtn" type="button">登出</button> <!-- 安全版登出按鈕 -->
   </div>
 
 </div>
 <script src="index.js"></script>
+<script>
+  // 安全版登出功能 + 確認視窗
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('確定要登出嗎？')) {
+      localStorage.removeItem('doctorAuth'); // 清除登入資訊
+      window.location.href = 'login.html';   // 跳轉回登入頁
+    }
+  });
+</script>
 </body>
 </html>

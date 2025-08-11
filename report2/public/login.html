@@ -185,8 +185,6 @@
             });
 
             if (resp.ok){
-                // 成功：可依需要儲存 Token、跳轉頁面
-                // 假設回傳 JSON: { ok:true, token:"...", name:"..." }
                 const json = await resp.json().catch(()=>({}));
                 if (data.remember){
                     localStorage.setItem('doctorAuth', JSON.stringify({
@@ -195,11 +193,12 @@
                         ts: Date.now()
                     }));
                 }
-                showMsg('登入成功，正在導向儀表板…');
-                // 修改為你的儀表板頁面路徑
-                setTimeout(()=>{ window.location.href = '/dashboard.html'; }, 600);
+                showMsg('登入成功，正在導向報告頁面…');
+                // 這裡改成跳轉到 report.html
+                setTimeout(()=>{ window.location.href = 'report.html'; }, 600);
                 return;
             }
+
             // 失敗：不揭露原因（避免暴露帳號存在與否）
             showMsg('登入失敗。請檢查帳號或密碼，或聯絡系統管理員。', true);
         } catch(err){
