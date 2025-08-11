@@ -9,6 +9,7 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const fetch = require('node-fetch');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -124,6 +125,27 @@ app.post('/save-result', authenticateToken, (req, res) => {
     }
     res.json({ status: "ok", path: filePath });
   });
+});
+
+// 接收觀察資料並轉發到 n8n
+app.post('/send-observations', authenticateToken, async (req, res) => {
+  try {
+    const { observation } = req.body;
+
+    // 呼叫 n8n webhook
+    const n8nRes = await fetch("http://localhost:5678/webhook/send-observation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ observation })
+    });
+
+    const data = await n8nRes.json();
+    res.json(data);
+
+  } catch (error) {
+    console.error("發送到 n8n 失敗:", error);
+    res.status(500).json({ error: '伺服器錯誤' });
+  }
 });
 
 // catch 404 and forward to error handler

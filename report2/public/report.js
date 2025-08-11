@@ -3,14 +3,12 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     const obs = document.getElementById("observation").value;
 
     try {
-        // 假設 token 已經存在 localStorage
         const token = localStorage.getItem('token');
 
-        const response = await fetch("http://localhost:5678/webhook-test/send-observation", {
+        const response = await fetch("http://localhost:3001/send-observations", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                // 帶上 Bearer token
                 "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({ observation: obs })
