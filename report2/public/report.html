@@ -6,6 +6,10 @@
 </head>
 <body>
 <h2>肺部影像觀察輸入</h2>
+
+<!-- 登出按鈕 -->
+<button id="logoutBtn" type="button" style="margin-bottom: 15px;">登出</button>
+
 <form id="reportForm">
   <label for="observation">請輸入觀察內容：</label><br>
   <textarea id="observation" name="observation" rows="5" cols="50" placeholder="例如：右上肺葉發現 45mm 結節，與主動脈相近..."></textarea><br><br>
@@ -14,7 +18,17 @@
 
 <h3>診斷結果：</h3>
 <pre id="result"></pre>
-<script src="report.js"></script>
-</body>
 
+<script src="report.js"></script>
+<script>
+  // 安全版登出功能
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('確定要登出嗎？')) {
+      localStorage.removeItem('doctorAuth'); // 清除登入資訊
+      localStorage.setItem('token', ' ');
+      window.location.href = 'login.html';   // 跳轉回登入頁
+    }
+  });
+</script>
+</body>
 </html>
