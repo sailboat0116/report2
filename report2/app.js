@@ -49,53 +49,44 @@ app.post("/save-result", (req, res) => {
   });
 });
 
-// ===== MySQL 連線池 =====
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-});
+require('dotenv').config();
+
+async function initDB() {
+  try {
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT
+    });
+    console.log('✅ MySQL connected!');
+    global.db = connection;
+  } catch (err) {
+    console.error('❌ MySQL connection failed:', err);
+    process.exit(1);
+  }
+}
+
+initDB();
+
 
 // ===== 登入 API =====
 app.post('/api/login', async (req, res) => {
+  const { doctorId, password } = req.body;
   try {
-    const { doctorId, password } = req.body || {};
-    if (!doctorId || !password) {
-      return res.status(400).json({ ok: false, msg: '缺少帳號或密碼' });
+    const [rows] = await global.db.execute(
+        'SELECT * FROM users WHERE username = ? AND password_hash = ?',
+        [doctorId, password]
+    );
+    if (rows.length > 0) {
+      res.json({ success: true, message: 'Login successful' });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-
-    const sql = `
-      SELECT id, login_id, display_name, role
-      FROM doctors
-      WHERE login_id = ?
-        AND password_hash = SHA2(?, 256)
-        AND is_active = 1
-      LIMIT 1
-    `;
-    const [rows] = await pool.query(sql, [doctorId, password]);
-
-    if (rows.length === 0) {
-      return res.status(401).json({ ok: false, msg: '帳號或密碼錯誤' });
-    }
-
-    const u = rows[0];
-    res.json({
-      ok: true,
-      user: {
-        id: u.id,
-        loginId: u.login_id,
-        name: u.display_name || u.login_id,
-        role: u.role,
-      },
-      token: 'demo-token',
-    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false, msg: '伺服器錯誤' });
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
