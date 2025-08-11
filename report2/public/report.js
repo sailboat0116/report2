@@ -3,7 +3,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     const obs = document.getElementById("observation").value;
 
     try {
-        const response = await fetch("http://localhost:5678/webhook-test/send-observation", {
+        const response = await fetch("http://localhost:5678/webhook/send-observation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ observation: obs })
