@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(cb => cb.parentElement.textContent.trim());
 
         // Other findings
-        const otherFindings = document.querySelector("fieldset textarea")?.value || "";
+        const otherFindings = document.getElementById("otherFindings")?.value || "";
 
         // IMP
         const impInputs = document.querySelectorAll(".imp-text input");
