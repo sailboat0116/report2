@@ -38,7 +38,10 @@ app.use('/users', usersRouter);
 app.post("/save-result", (req, res) => {
   const result = req.body;
 
-  const filePath = path.join("C:", "Users", "sailboat", "Desktop", "result.txt");
+  const recordId = result.record_id || "unknown";
+  const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
+  const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
+  const filePath = path.join("C:", "Users", "sailboat", "case_data", fileName);
 
   fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
     if (err) {

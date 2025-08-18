@@ -3,6 +3,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     const obs = document.getElementById("observation").value;
 
     try {
+        console.log("aaa");
         const response = await fetch("http://localhost:5678/webhook/send-observation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -24,6 +25,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
                 }
             };
             localStorage.setItem("generatedReport", JSON.stringify(formDataToSave));
+            //localStorage.setItem("reportText", result.response);
 
             // ✅ 改為絕對路徑
             setTimeout(() => {
