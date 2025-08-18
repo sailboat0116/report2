@@ -29,6 +29,9 @@ document.getElementById("reportForm").addEventListener("submit", async function 
                 }
             };
             localStorage.setItem("generatedReport", JSON.stringify(formDataToSave));
+            localStorage.setItem("reportText", result.response);
+
+
 
             setTimeout(() => {
                 window.location.href = "/response.html";

@@ -45,7 +45,9 @@
     document.getElementById("nextPageBtn").addEventListener("click", () => {
         try {
             const parsedData = JSON.parse(document.getElementById("formData").innerText);
+
             localStorage.setItem("generatedReport", JSON.stringify(parsedData));
+            localStorage.setItem("generatedReport_text", reportText);
             window.location.href = "index.html";
         } catch (e) {
             alert("❌ 無法儲存資料，請確認格式是否正確！");

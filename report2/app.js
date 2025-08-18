@@ -116,7 +116,12 @@ function authenticateToken(req, res, next) {
 // 使用範例：保護 /save-result 路由
 app.post('/save-result', authenticateToken, (req, res) => {
   const result = req.body;
-  const filePath = path.join("C:", "Users", "sailboat", "Desktop", "result.txt");
+
+  // 從 body 抓 record_id + imaging_date 組成檔名
+  const recordId = result.record_id || "unknown";
+  const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
+  const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
+  const filePath = path.join("C:", "Users", "sailboat", "case_data", fileName);
 
   fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
     if (err) {
@@ -126,6 +131,7 @@ app.post('/save-result', authenticateToken, (req, res) => {
     res.json({ status: "ok", path: filePath });
   });
 });
+
 
 // 接收觀察資料並轉發到 n8n
 app.post('/send-observations', authenticateToken, async (req, res) => {

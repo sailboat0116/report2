@@ -183,11 +183,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Tumor size（只填文字框）
-        const sizeField = document.querySelector('input[placeholder*="cm"]');
-        if (sizeField && report.tumor_size_cm) {
-            const cm = parseFloat(report.tumor_size_cm).toFixed(1);
-            sizeField.value = `${cm} cm`;
+        const sizeRadios = document.querySelectorAll('input[name="size"]');
+        if (report.tumor_size_cm) {
+            const sizeVal = report.tumor_size_cm.toLowerCase();
+            if (sizeVal.includes("non")) {
+                sizeRadios.forEach(r => {
+                    if (r.parentElement.textContent.includes("Non-measurable")) r.checked = true;
+                });
+            } else {
+                sizeRadios.forEach(r => {
+                    if (r.parentElement.textContent.includes("Measurable")) {
+                        r.checked = true;
+                        const input = r.parentElement.querySelector('input[type="text"]');
+                        if (input) input.value = report.tumor_size_cm;
+                    }
+                });
+            }
         }
+
 
         // Other findings
         const otherFindings = document.querySelector('textarea[placeholder="Enter other findings here..."]');
@@ -238,7 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const lungRadsCategory = "";
 
+        const parsedReport_text = localStorage.getItem("generatedReport_text");
+
+        const filename = `${recordId.value.trim()}_${imagingDate.value}.json`;
+
         const result = {
+            record_id: recordId.value.trim(),
+            patient_name: patientName.value.trim(),
+            patient_info: patientInfo.value.trim(),
+            imaging_date: imagingDate.value,
             tumor_location: tumorLocation.join(", "),
             tumor_size_cm: tumorSizeCm,
             T_stage: tStage.join(", "),
@@ -247,7 +268,10 @@ document.addEventListener("DOMContentLoaded", () => {
             lung_rads_category: lungRadsCategory,
             other_findings: otherFindings,
             imp,
+            condition: parsedReport_text,
+            filename
         };
+
 
         console.log("Saved JSON:", result);
 
