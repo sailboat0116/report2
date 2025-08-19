@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => console.error("存檔失敗：", err));
 
         // ---- 傳到 n8n webhook ----
-        fetch("http://localhost:5678/webhook-test/lung-report", {
+        fetch("http://localhost:5678/webhook/lung-report", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(result),

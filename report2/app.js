@@ -41,7 +41,7 @@ app.post("/save-result", (req, res) => {
   const recordId = result.record_id || "unknown";
   const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
   const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
-  const dirPath = path.join(__dirname, "case_data");
+  const filePath = path.join("C:", "Users", "sailboat", "case_data", fileName);
 
   fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
     if (err) {
@@ -74,22 +74,35 @@ app.post('/api/login', async (req, res) => {
     }
 
     // 呼叫 n8n workflow
-    const n8nResponse = await axios.post('http://localhost:5678/webhook-test/login', {
+    const n8nResponse = await axios.post('http://localhost:5678/webhook/login', {
       doctorId,
       password,
     });
 
-    const data = n8nResponse.data;
-    console.log(data);
-    if (!data.success) {
-      return res.status(401).json({ ok: false, msg: data.msg });
+    const users = n8nResponse.data; // 這裡是一個陣列
+    console.log(users);
+
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(401).json({ ok: false, msg: '找不到使用者資料' });
+    }
+
+    // 找出 doctorId 對應的 user
+    const user = users.find(u => u.username === doctorId);
+
+    if (!user) {
+      return res.status(401).json({ ok: false, msg: '帳號不存在' });
+    }
+
+    // 密碼比對（目前是明碼）
+    if (user.password_hash !== password) {
+      return res.status(401).json({ ok: false, msg: '密碼錯誤' });
     }
 
     // 登入成功
     res.json({
       ok: true,
-      user: data.user, // n8n workflow 回傳的使用者資料
-      //token: 'demo-token', // 可自行改成 JWT
+      user: { id: user.id, username: user.username },
+      //token: 'demo-token'
     });
 
   } catch (err) {
@@ -97,6 +110,8 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ ok: false, msg: '伺服器錯誤' });
   }
 });
+
+
 
 
 // catch 404 and forward to error handler
