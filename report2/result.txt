@@ -1,0 +1,14 @@
+{
+  "tumor_location": "Right upper lobe",
+  "tumor_size_cm": "Non-measurable",
+  "T_stage": "Tx: Primary tumor cannot be assessed, T1mi: Minimally invasive adenocarcinoma (≤3cm with ≤5mm invasion), T2b: Tumor >4cm but ≤5cm, with similar features as T2a, Tumor >5cm but ≤7cm, Tumor >7cm",
+  "N_stage": "NX: Regional lymph nodes cannot be assessed",
+  "M_stage": "M0: No distant metastasis",
+  "lung_rads_category": "",
+  "other_findings": "1",
+  "imp": {
+    "T": "1",
+    "N": "1",
+    "M": "1"
+  }
+}

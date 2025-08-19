@@ -41,7 +41,7 @@ app.post("/save-result", (req, res) => {
   const recordId = result.record_id || "unknown";
   const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
   const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
-  const filePath = path.join("C:", "Users", "sailboat", "case_data", fileName);
+  const dirPath = path.join(__dirname, "case_data");
 
   fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
     if (err) {
@@ -64,6 +64,8 @@ const pool = mysql.createPool({
 });
 
 // ===== 登入 API =====
+const axios = require('axios');
+
 app.post('/api/login', async (req, res) => {
   try {
     const { doctorId, password } = req.body || {};
@@ -71,36 +73,31 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ ok: false, msg: '缺少帳號或密碼' });
     }
 
-    const sql = `
-      SELECT id, login_id, display_name, role
-      FROM doctors
-      WHERE login_id = ?
-        AND password_hash = SHA2(?, 256)
-        AND is_active = 1
-      LIMIT 1
-    `;
-    const [rows] = await pool.query(sql, [doctorId, password]);
+    // 呼叫 n8n workflow
+    const n8nResponse = await axios.post('http://localhost:5678/webhook-test/login', {
+      doctorId,
+      password,
+    });
 
-    if (rows.length === 0) {
-      return res.status(401).json({ ok: false, msg: '帳號或密碼錯誤' });
+    const data = n8nResponse.data;
+    console.log(data);
+    if (!data.success) {
+      return res.status(401).json({ ok: false, msg: data.msg });
     }
 
-    const u = rows[0];
+    // 登入成功
     res.json({
       ok: true,
-      user: {
-        id: u.id,
-        loginId: u.login_id,
-        name: u.display_name || u.login_id,
-        role: u.role,
-      },
-      token: 'demo-token',
+      user: data.user, // n8n workflow 回傳的使用者資料
+      //token: 'demo-token', // 可自行改成 JWT
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ ok: false, msg: '伺服器錯誤' });
   }
 });
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
