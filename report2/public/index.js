@@ -295,7 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
         // 2. 送到 n8n webhook（port 5678）
-        fetch('http://localhost:5678/webhook-test/lung-report', {
+        fetch('http://localhost:5678/webhook/lung-report', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
