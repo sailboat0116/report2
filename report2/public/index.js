@@ -149,17 +149,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (report.imp?.M) imp_M.value = report.imp.M.replace(/[^0-9a-zA-Z]/g, "");
 
         // 自動勾選 T/N/M
-        function autoCheckInputs(group, val) {
+        function autoCheckStage(group, val) {
             if (!val) return;
+            // 兼容 name="T" 或 name="T1" 等命名規則
             const inputs = document.querySelectorAll(`input[name="${group}"], input[name="${group}1"]`);
             inputs.forEach(input => {
                 const labelText = input.parentElement.textContent.trim();
-                if (labelText.includes(val)) input.checked = true;
+                // 取冒號前的代號
+                const code = labelText.split(":")[0].trim();
+                if (code.toLowerCase() === val.toLowerCase()) {
+                    input.checked = true;
+                }
             });
         }
-        autoCheckInputs("T", report.T_stage);
-        autoCheckInputs("N", report.N_stage);
-        autoCheckInputs("M", report.M_stage);
+
+// 使用示例
+        autoCheckStage("T", report.T_stage); // 勾選 T 分期
+        autoCheckStage("N", report.N_stage); // 勾選 N 分期
+        autoCheckStage("M", report.M_stage); // 勾選 M 分期
+
 
         // Tumor Location
         if (report.tumor_location) {

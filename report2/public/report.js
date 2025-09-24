@@ -3,7 +3,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     const obs = document.getElementById("observation").value;
 
     try {
-        console.log("aaa");
+
         const response = await fetch("http://localhost:5678/webhook/send-observation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -24,12 +24,19 @@ document.getElementById("reportForm").addEventListener("submit", async function 
                     M: result.form_data?.M_stage,
                 }
             };
+            console.log(result.form_data.benign_malignant);
             localStorage.setItem("generatedReport", JSON.stringify(formDataToSave));
             localStorage.setItem("reportText", result.response);
 
             // ✅ 改為絕對路徑
             setTimeout(() => {
-                window.location.href = "/response.html";
+                if (result.form_data.benign_malignant?.toLowerCase() === "benign" ||
+                    result.form_data.benign_malignant === "良性") {
+                    console.log("aaa");
+                    window.location.href = "/benign.html";
+                } else {
+                    window.location.href = "/response.html";
+                }
             }, 2000);
         }
 
