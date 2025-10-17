@@ -1,10 +1,9 @@
 document.getElementById("reportForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const obs = document.getElementById("observation").value;
-
     try {
 
-        const response = await fetch("http://localhost:5678/webhook/send-observation", {
+        const response = await fetch("http://172.20.10.2:5678/webhook/send-observation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ observation: obs })
@@ -24,7 +23,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
                     M: result.form_data?.M_stage,
                 }
             };
-            console.log(result.form_data.benign_malignant);
+            console.log(result.form_data);
             localStorage.setItem("generatedReport", JSON.stringify(formDataToSave));
             localStorage.setItem("reportText", result.response);
 

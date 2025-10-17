@@ -1,33 +1,298 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>肺部診斷生成系統</title>
+    <meta charset="UTF-8">
+    <title>肺部診斷生成系統｜觀察輸入</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        /* === 延續 index.html 的淺色系與元件語彙 === */
+        :root{
+            --bg:#f8fafc;          /* 背景 */
+            --panel:#ffffff;       /* 卡片底 */
+            --border:#e5e7eb;      /* 邊框 */
+            --muted:#6b7280;       /* 次要字 */
+            --text:#0f172a;        /* 主要字 */
+            --brand:#4f46e5;       /* 主色 */
+            --ok:#059669;          /* 成功 */
+            --warn:#d97706;        /* 警示 */
+            --bad:#dc2626;         /* 危險 */
+            --pill:#eef2ff;        /* 淡藍 pill */
+            --mono:#0b1220;        /* 等寬字顏色 */
+            --mono-bg:#f3f4f6;     /* 結果區柔灰底 */
+            --hover:#f1f5f9;       /* hover 背景 */
+            --shadow:0 6px 20px rgba(15, 23, 42, .06);
+        }
+        *{ box-sizing: border-box; }
+        html, body { height:100%; }
+        body{
+            margin:0; background:var(--bg); color:var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+            line-height:1.6;
+        }
+        .container{ max-width:1100px; margin:32px auto 80px; padding:0 16px; }
+
+        /* 頁首與工具列 */
+        .page-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+        .title{ font-size: clamp(20px, 1.6rem, 28px); font-weight:700; letter-spacing:.3px; }
+        .subtitle{ color:var(--muted); font-size:.95rem; margin-top:-4px; }
+        .toolbar{ display:flex; flex-wrap:wrap; gap:10px; }
+        .btn{
+            padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#fff;
+            cursor:pointer; font-weight:600; transition: background .15s ease, transform .02s ease;
+        }
+        .btn:hover{ background:var(--hover); }
+        .btn:active{ transform: translateY(1px); }
+        .btn.brand{ background:var(--brand); color:#fff; border-color:var(--brand); }
+        .btn.brand:hover{ filter: brightness(.96); }
+        .btn.danger{ background:#fff; color:var(--bad); border-color:#fecaca; }
+        .btn.danger:hover{ background:#fff5f5; }
+        .btn.ghost{ background:transparent; }
+
+        /* 卡片與版型 */
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:12px;
+            box-shadow:var(--shadow);
+            padding:16px;
+        }
+        .grid{ display:grid; gap:16px; grid-template-columns: 1fr; }
+        @media (min-width: 980px){ .grid{ grid-template-columns: 1.05fr .95fr; } }
+        .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .section-head h3{ margin:0; font-size:1.05rem; }
+        .pill{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 10px; border:1px solid var(--border); border-radius:999px;
+            background:var(--pill); color:#3730a3; font-weight:600; font-size:.9rem;
+        }
+        .hint{ color:var(--muted); font-size:.92rem; }
+
+        /* 輸入區 */
+        .field{ display:flex; flex-direction:column; gap:8px; }
+        label{ font-weight:600; }
+        textarea{
+            width:100%; min-height:160px; resize:vertical;
+            font-size:1rem; line-height:1.6;
+            border:1px solid var(--border); border-radius:10px;
+            padding:12px 14px; background:#fff; color:var(--text);
+        }
+        .stat-line{ display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:.9rem; }
+
+        /* 結果區（等寬字 + 柔灰底） */
+        .pre{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", "Noto Sans Mono CJK TC", monospace;
+            background:var(--mono-bg);
+            color:var(--mono);
+            border:1px dashed var(--border);
+            border-radius:10px;
+            padding:14px;
+            white-space: pre-wrap;
+            overflow:auto;
+            max-height:460px;
+        }
+
+        /* 固定側邊快速動作（桌機顯示） */
+        .side-buttons{
+            position:fixed; right:24px; top:120px;
+            display:flex; flex-direction:column; gap:10px;
+        }
+        .side-buttons .btn{ background:#fff; }
+        @media (max-width:1080px){ .side-buttons{ display:none; } }
+    </style>
 </head>
 <body>
-<h2>肺部影像觀察輸入</h2>
+<div class="container">
+    <!-- 頁首 -->
+    <header class="page-head">
+        <div>
+            <div class="title">肺部影像觀察輸入</div>
+            <div class="subtitle">與填表頁一致的淺色風格與工具列</div>
+        </div>
+        <div class="toolbar">
+            <button id="backBtn" class="btn">返回填表</button>
+            <button id="clearBtn" class="btn">清空輸入</button>
+            <button id="copyObsBtn" class="btn">複製觀察文字</button>
+            <button id="saveLocalBtn" class="btn">儲存至本機</button>
+            <button id="toResponseBtn" class="btn brand">前往結果頁</button>
+            <button id="logoutBtn" class="btn danger">登出</button>
+        </div>
+    </header>
 
-<!-- 登出按鈕 -->
-<button id="logoutBtn" type="button" style="margin-bottom: 15px;">登出</button>
+    <!-- 內容 -->
+    <div class="grid">
+        <!-- 左：輸入區 -->
+        <section class="card">
+            <div class="section-head">
+                <h3>輸入觀察內容</h3>
+                <span class="pill" id="obsBadge">Ready</span>
+            </div>
+            <form id="reportForm" class="field">
+                <label for="observation">請輸入觀察內容：</label>
+                <textarea id="observation" name="observation" placeholder="例如：右上肺葉見 45 mm 結節，邊緣不規則並伴有 spiculation，鄰近胸膜受侵犯疑慮……"></textarea>
+                <div class="stat-line">
+                    <span class="hint">快捷鍵：<kbd>Ctrl / ⌘</kbd> + <kbd>Enter</kbd> 送出</span>
+                    <span class="hint" id="charCount">0 字</span>
+                </div>
+                <div class="toolbar">
+                    <button type="submit" class="btn brand">產生診斷報告</button>
+                    <button type="button" id="copyResultBtn" class="btn">複製結果</button>
+                </div>
+            </form>
+        </section>
 
-<form id="reportForm">
-  <label for="observation">請輸入觀察內容：</label><br>
-  <textarea id="observation" name="observation" rows="5" cols="50" placeholder="例如：右上肺葉發現 45mm 結節，與主動脈相近..."></textarea><br><br>
-  <button type="submit">產生診斷報告</button>
-</form>
+        <!-- 右：結果區 -->
+        <aside class="card">
+            <div class="section-head">
+                <h3>診斷結果</h3>
+                <span class="pill" id="resultBadge">等待輸出</span>
+            </div>
+            <pre id="result" class="pre" aria-label="Generated Report">尚未產生結果</pre>
+            <p class="hint" style="margin-top:8px;">
+                備註：本頁會將結果文字同步到 <code>localStorage.reportText</code>，可搭配 <code>response.html</code> 頁面進行預覽、列印與下載。
+            </p>
+        </aside>
+    </div>
+</div>
 
-<h3>診斷結果：</h3>
-<pre id="result"></pre>
+<!-- 固定側邊快速動作（桌機） -->
+<div class="side-buttons">
+    <button id="quickCopyObs" class="btn">複製觀察</button>
+    <button id="quickCopyRes" class="btn">複製結果</button>
+</div>
 
+<!-- 原本的邏輯檔，保持相容 -->
 <script src="report.js"></script>
+
 <script>
-  // 安全版登出功能
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    if (confirm('確定要登出嗎？')) {
-      localStorage.removeItem('doctorAuth'); // 清除登入資訊
-      window.location.href = 'login.html';   // 跳轉回登入頁
+    // === 輕量 toast ===
+    function toast(msg){
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.position='fixed';
+        t.style.left='50%';
+        t.style.top='24px';
+        t.style.transform='translateX(-50%)';
+        t.style.background='#111827';
+        t.style.color='#fff';
+        t.style.padding='10px 14px';
+        t.style.borderRadius='8px';
+        t.style.boxShadow='0 8px 24px rgba(0,0,0,.18)';
+        t.style.zIndex='9999';
+        document.body.appendChild(t);
+        setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; }, 1200);
+        setTimeout(()=>{ t.remove(); }, 1600);
     }
-  });
+
+    // === 元素參照 ===
+    const obsEl = document.getElementById('observation');
+    const resultEl = document.getElementById('result');
+    const charCountEl = document.getElementById('charCount');
+    const obsBadge = document.getElementById('obsBadge');
+    const resultBadge = document.getElementById('resultBadge');
+
+    // === 預填：若本機有暫存，帶回輸入框（不覆蓋你 report.js 的流程） ===
+    const savedObs = localStorage.getItem('lastObservation');
+    if (savedObs) {
+        obsEl.value = savedObs;
+        charCountEl.textContent = savedObs.length + ' 字';
+        obsBadge.textContent = 'Loaded';
+    }
+
+    // === 輸入字數即時更新 ===
+    obsEl.addEventListener('input', () => {
+        charCountEl.textContent = (obsEl.value || '').length + ' 字';
+    });
+
+    // === 送出：Ctrl/Cmd+Enter 快捷 ===
+    obsEl.addEventListener('keydown', (e)=>{
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('reportForm').requestSubmit();
+        }
+    });
+
+    // === 表單送出：顯示「生成中」，其餘由 report.js 覆寫／更新 resultEl ===
+    document.getElementById('reportForm').addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const text = obsEl.value.trim();
+        if (!text) { toast('請先輸入觀察內容'); return; }
+        // 暫存輸入
+        localStorage.setItem('lastObservation', text);
+        resultEl.textContent = '生成中…';
+        resultBadge.textContent = '處理中';
+        // 若 report.js 會更新結果，這裡不多做事；若沒有，保底轉存到 reportText
+        // （建議在 report.js 生成後呼叫：localStorage.setItem('reportText', generatedText);）
+    });
+
+    // === 複製觀察與結果 ===
+    function copy(text){ navigator.clipboard.writeText(text || ''); toast('已複製'); }
+    document.getElementById('copyObsBtn').addEventListener('click', ()=> copy(obsEl.value));
+    document.getElementById('quickCopyObs').addEventListener('click', ()=> copy(obsEl.value));
+    document.getElementById('copyResultBtn').addEventListener('click', ()=> copy(resultEl.textContent));
+    document.getElementById('quickCopyRes').addEventListener('click', ()=> copy(resultEl.textContent));
+
+    // === 儲存至 localStorage：將結果寫入 reportText，供 response.html 使用 ===
+    document.getElementById('saveLocalBtn').addEventListener('click', ()=>{
+        const text = (resultEl.textContent || '').trim();
+        if (!text || text === '尚未產生結果' || text === '生成中…'){
+            toast('目前沒有可儲存的結果'); return;
+        }
+        localStorage.setItem('reportText', text);
+        toast('已儲存至本機（reportText）');
+        resultBadge.textContent = '已儲存';
+    });
+
+    // === 前往結果頁 ===
+    document.getElementById('toResponseBtn').addEventListener('click', ()=>{
+        // 若未保存，先嘗試寫入一次
+        const text = (resultEl.textContent || '').trim();
+        if (text && text !== '尚未產生結果' && text !== '生成中…'){
+            localStorage.setItem('reportText', text);
+        }
+        window.location.href = 'response.html';
+    });
+
+    // === 返回填表 ===
+    document.getElementById('backBtn').addEventListener('click', ()=>{
+        window.location.href = 'index.html';
+    });
+
+    // === 清空輸入 ===
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+        if (!obsEl.value) { toast('無需清空'); return; }
+        if (confirm('確定要清空輸入內容？')){
+            obsEl.value = '';
+            localStorage.removeItem('lastObservation');
+            charCountEl.textContent = '0 字';
+            toast('已清空');
+        }
+    });
+
+    // === 安全登出 ===
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+        if (confirm('確定要登出嗎？')){
+            localStorage.removeItem('doctorAuth');
+            window.location.href = 'login.html';
+        }
+    });
+
+    // === 觀察：若 report.js 生成後有寫入 reportText，這裡監聽 storage 反映到頁面（同分頁安全保底） ===
+    window.addEventListener('storage', (e)=>{
+        if (e.key === 'reportText') {
+            const v = e.newValue || '';
+            if (v.trim()) {
+                resultEl.textContent = v;
+                resultBadge.textContent = '已更新';
+            }
+        }
+    });
+
+    // === 若本地已有 reportText，載入為預設結果（方便回看） ===
+    const existing = localStorage.getItem('reportText');
+    if (existing && existing.trim()){
+        resultEl.textContent = existing;
+        resultBadge.textContent = 'Loaded';
+    }
 </script>
 </body>
 </html>

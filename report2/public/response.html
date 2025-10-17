@@ -3,66 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <title>診斷報告結果</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 8px; }
-        button { padding: 10px 20px; margin-top: 20px; font-size: 16px; }
-        #logoutBtn { margin-left: 10px; background-color: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #logoutBtn:hover { background-color: #c0392b; }
+        /* === 共用色票，延續 index.html 的淺色風格 === */
+        :root{
+            --bg:#f8fafc;          /* 淺底 */
+            --panel:#ffffff;       /* 卡片底 */
+            --border:#e5e7eb;      /* 邊框 */
+            --muted:#6b7280;       /* 次要字 */
+            --text:#0f172a;        /* 主要字 */
+            --brand:#4f46e5;       /* 主色 */
+            --ok:#059669;          /* 成功 */
+            --warn:#d97706;        /* 警示 */
+            --bad:#dc2626;         /* 危險 */
+            --pill:#eef2ff;        /* 淡淡的藍色 pill 底 */
+            --mono:#0b1220;        /* 等寬字顏色（但不會太黑） */
+            --mono-bg:#f3f4f6;     /* 報告區塊背景：柔和、非純白 */
+            --hover:#f1f5f9;       /* hover 背景 */
+            --shadow:0 6px 20px rgba(15, 23, 42, .06);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial, "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        .container{
+            max-width: 1100px;
+            margin: 32px auto 80px;
+            padding: 0 16px;
+        }
+
+        /* 頁首 */
+        .page-head{
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            margin-bottom:16px;
+        }
+        .title{
+            font-size: clamp(20px, 1.6rem, 28px);
+            font-weight: 700;
+            letter-spacing:.3px;
+        }
+        .subtitle{
+            color: var(--muted);
+            font-size:.95rem;
+            margin-top: -4px;
+        }
+
+        /* 工具列 */
+        .toolbar{
+            display:flex; flex-wrap:wrap; gap:10px;
+            margin: 10px 0 18px;
+        }
+        .btn{
+            padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#fff;
+            cursor:pointer; font-weight:600;
+            transition: background .15s ease, transform .02s ease;
+        }
+        .btn:hover{ background: var(--hover); }
+        .btn:active{ transform: translateY(1px); }
+        .btn.brand{ background: var(--brand); color:#fff; border-color: var(--brand); }
+        .btn.brand:hover{ filter: brightness(.96); }
+        .btn.danger{ background:#fff; color: var(--bad); border-color: #fecaca; }
+        .btn.danger:hover{ background:#fff5f5; }
+        .btn.ghost{ background:transparent; }
+
+        /* 卡片 */
+        .card{
+            background: var(--panel);
+            border:1px solid var(--border);
+            border-radius:12px;
+            box-shadow: var(--shadow);
+            padding:16px;
+        }
+
+        /* 自適應雙欄佈局 */
+        .grid{
+            display:grid; gap:16px;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 980px){
+            .grid{ grid-template-columns: 1.1fr .9fr; }
+        }
+
+        .section-head{
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+            margin-bottom:10px;
+        }
+        .section-head h3{ margin:0; font-size:1.05rem; }
+        .pill{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 10px; border:1px solid var(--border); border-radius:999px;
+            background: var(--pill);
+            color:#3730a3; font-weight:600; font-size:.9rem;
+        }
+
+        /* 報告預覽（可捲動、等寬） */
+        .report-pre{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", "Noto Sans Mono CJK TC", monospace;
+            background: var(--mono-bg);
+            color: var(--mono);
+            border:1px dashed var(--border);
+            border-radius:10px;
+            padding:14px;
+            white-space: pre-wrap;
+            overflow:auto;
+            max-height: 420px;
+        }
+
+        /* JSON viewer 區 */
+        .json-tools{
+            display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+            margin-bottom:8px;
+        }
+        details.summary-card{
+            border:1px solid var(--border);
+            border-radius:10px;
+            background:#fff;
+            padding:10px 12px;
+        }
+        details.summary-card > summary{
+            list-style:none; cursor:pointer; outline:none; user-select:none;
+            font-weight:700;
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+        }
+        details.summary-card[open]{ box-shadow: var(--shadow); }
+        .json-pre{
+            background: var(--mono-bg);
+            color: var(--mono);
+            border:1px dashed var(--border);
+            border-radius:10px;
+            padding:12px;
+            white-space: pre-wrap;
+            overflow:auto;
+            max-height: 420px;
+            margin-top:10px;
+        }
+
+        /* 頁腳提示 */
+        .hint{ color: var(--muted); font-size:.92rem; }
+
+        /* 固定側邊快速動作（選配） */
+        .side-buttons {
+            position: fixed; right: 24px; top: 120px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .side-buttons .btn{ background:#fff; }
+        @media (max-width: 1080px){
+            .side-buttons{ display:none; }
+        }
     </style>
 </head>
 <body>
+<div class="container">
+    <!-- 頁首 -->
+    <header class="page-head">
+        <div>
+            <div class="title">診斷報告結果</div>
+            <div class="subtitle">與填表頁樣式一致的輕量預覽與結構化檢視</div>
+        </div>
+        <div class="toolbar">
+            <button id="backBtn" class="btn">返回填表</button>
+            <button id="printBtn" class="btn">列印 / 另存 PDF</button>
+            <button id="copyReportBtn" class="btn">複製報告文字</button>
+            <button id="downloadJsonBtn" class="btn">下載 JSON</button>
+            <button id="logoutBtn" class="btn danger">登出</button>
+            <button id="nextPageBtn" class="btn brand">下一頁</button>
 
-<h2>診斷報告結果</h2>
+        </div>
+    </header>
 
-<!-- 登出按鈕 -->
-<button id="logoutBtn" type="button">登出</button>
+    <!-- 主內容 -->
+    <div class="grid">
+        <!-- 左側：報告預覽 -->
+        <section class="card">
+            <div class="section-head">
+                <h3>報告預覽</h3>
+                <span class="pill" id="previewBadge">Ready</span>
+            </div>
+            <div id="report" class="report-pre" aria-label="Report Preview">載入中…</div>
+            <div class="hint" style="margin-top:8px;">
+                小提示：此處為 AI／系統生成或整理後的文字稿。你可以先「複製報告文字」送審，再視需要匯出 JSON 進行自動回填。
+            </div>
+        </section>
 
-<pre id="report"></pre>
+        <!-- 右側：結構化資料 -->
+        <aside class="card">
+            <div class="section-head">
+                <h3>結構化資料（Form Data）</h3>
+                <div class="json-tools">
+                    <button id="copyJsonBtn" class="btn">複製 JSON</button>
+                    <button id="validateBtn" class="btn">驗證 JSON</button>
+                </div>
+            </div>
 
-<h3>結構化資料（Form Data）</h3>
-<pre id="formData"></pre>
+            <details class="summary-card" open>
+                <summary>
+                    目前資料（localStorage: <code>generatedReport</code>）
+                    <span class="hint" id="jsonStatus">未驗證</span>
+                </summary>
+                <pre id="formData" class="json-pre" aria-label="Form Data JSON">載入中…</pre>
+            </details>
+        </aside>
+    </div>
 
-<button id="nextPageBtn">下一頁 ➜ 自動填表</button>
+    <p class="hint" style="margin-top:16px;">
+        資料來源：本頁會從 <code>localStorage.reportText</code> 與 <code>localStorage.generatedReport</code> 載入內容；返回填表後可再調整欄位並重新產生。
+    </p>
+</div>
+
+<!-- 固定側邊快速動作（桌機） -->
+<div class="side-buttons">
+    <button id="quickCopy" class="btn">複製報告</button>
+    <button id="quickDownload" class="btn">下載 JSON</button>
+</div>
 
 <script>
-    // 顯示資料
-    const storedData = localStorage.getItem("generatedReport");
-    const reportText = localStorage.getItem("reportText");
-
-    if (storedData) {
-        try {
-            const parsedData = JSON.parse(storedData);
-            document.getElementById("formData").innerText = JSON.stringify(parsedData, null, 2);
-        } catch (e) {
-            document.getElementById("formData").innerText = "⚠️ JSON 資料解析錯誤";
-        }
-    } else {
-        document.getElementById("formData").innerText = "⚠️ 沒有可用的資料";
+    // === 輔助：toast 訊息（簡易） ===
+    function toast(msg){
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.position='fixed';
+        t.style.left='50%';
+        t.style.top='24px';
+        t.style.transform='translateX(-50%)';
+        t.style.background='#111827';
+        t.style.color='#fff';
+        t.style.padding='10px 14px';
+        t.style.borderRadius='8px';
+        t.style.boxShadow='0 8px 24px rgba(0,0,0,.18)';
+        t.style.zIndex='9999';
+        document.body.appendChild(t);
+        setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; }, 1200);
+        setTimeout(()=>{ t.remove(); }, 1600);
     }
 
-    document.getElementById("report").innerText = reportText || "尚無報告內容";
+    // === 載入 localStorage 資料 ===
+    const reportEl = document.getElementById('report');
+    const formDataEl = document.getElementById('formData');
+    const badgeEl = document.getElementById('previewBadge');
+    const jsonStatusEl = document.getElementById('jsonStatus');
 
-    // 下一頁按鈕邏輯
+    const reportText = localStorage.getItem('reportText');
+    const storedData = localStorage.getItem('generatedReport');
+
+    // 報告文字
+    if (reportText && reportText.trim().length){
+        reportEl.textContent = reportText;
+        badgeEl.textContent = 'Loaded';
+    } else {
+        reportEl.textContent = '尚無報告內容';
+        badgeEl.textContent = 'Empty';
+    }
+
+    // 結構化 JSON
+    if (storedData){
+        try{
+            const parsed = JSON.parse(storedData);
+            formDataEl.textContent = JSON.stringify(parsed, null, 2);
+            jsonStatusEl.textContent = '解析成功';
+        }catch(e){
+            formDataEl.textContent = storedData; // 原樣顯示，讓使用者自行修正
+            jsonStatusEl.textContent = '⚠️ JSON 解析錯誤';
+        }
+    }else{
+        formDataEl.textContent = '⚠️ 沒有可用的資料';
+        jsonStatusEl.textContent = '空';
+    }
+
+    // === 互動邏輯 ===
+    // 返回填表
+    document.getElementById('backBtn').addEventListener('click', ()=>{
+        // 這裡不更動資料，單純返回 index.html
+        window.location.href = 'index.html';
+    });
+
+    // 列印 / 另存 PDF
+    document.getElementById('printBtn').addEventListener('click', ()=>{
+        window.print();
+    });
+
+    // 複製報告文字
+    function copyReport(){
+        const text = reportEl.textContent || '';
+        navigator.clipboard.writeText(text).then(()=> toast('已複製報告文字'));
+    }
+    document.getElementById('copyReportBtn').addEventListener('click', copyReport);
+    document.getElementById('quickCopy').addEventListener('click', copyReport);
+
+    // 下載 JSON
+    function downloadJSON(){
+        let content = formDataEl.textContent || '';
+        // 若不是合法 JSON，就包成字串檔避免下載錯誤
+        try{
+            JSON.parse(content);
+        }catch(e){
+            content = JSON.stringify({ raw: content }, null, 2);
+        }
+        const blob = new Blob([content], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'generatedReport.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast('已下載 JSON');
+    }
+    document.getElementById('downloadJsonBtn').addEventListener('click', downloadJSON);
+    document.getElementById('quickDownload').addEventListener('click', downloadJSON);
+
+    // 複製 JSON
+    document.getElementById('copyJsonBtn').addEventListener('click', ()=>{
+        navigator.clipboard.writeText(formDataEl.textContent || '').then(()=> toast('已複製 JSON'));
+    });
+
+    // 驗證 JSON（簡易）
+    document.getElementById('validateBtn').addEventListener('click', ()=>{
+        try{
+            const obj = JSON.parse(formDataEl.textContent || '');
+            jsonStatusEl.textContent = '✅ 合法 JSON';
+            toast('JSON 驗證成功');
+            // 驗證成功時，回寫到 localStorage（保持你原本流程相容）
+            localStorage.setItem('generatedReport', JSON.stringify(obj));
+        }catch(e){
+            jsonStatusEl.textContent = '❌ 非合法 JSON';
+            toast('JSON 驗證失敗，請檢查格式');
+        }
+    });
+
+    // === 下一頁按鈕邏輯 ===
     document.getElementById("nextPageBtn").addEventListener("click", () => {
         try {
             const parsedData = JSON.parse(document.getElementById("formData").innerText);
+            const reportText = document.getElementById("report").innerText;
+
+            // 儲存資料到 localStorage
             localStorage.setItem("generatedReport", JSON.stringify(parsedData));
             localStorage.setItem("generatedReport_text", reportText);
+
+            // 導向下一頁（index.html）
             window.location.href = "index.html";
         } catch (e) {
             alert("❌ 無法儲存資料，請確認格式是否正確！");
         }
     });
 
-    // 安全版登出功能
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-        if (confirm('確定要登出嗎？')) {
-            localStorage.removeItem('doctorAuth'); // 清除登入資訊
-            window.location.href = 'login.html';   // 跳轉回登入頁
+
+    // 安全登出
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+        if (confirm('確定要登出嗎？')){
+            localStorage.removeItem('doctorAuth');
+            window.location.href = 'login.html';
         }
     });
 </script>
-
 </body>
 </html>

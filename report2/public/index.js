@@ -141,6 +141,26 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        localStorage.setItem('lungRadsCategory', report.lung_rads_category);
+
+        // 1. Imaging Date
+        const dateInput = document.querySelector('input[name="date"]');
+        if (dateInput && report.imaging_date) {
+            dateInput.value = report.imaging_date.trim();
+        }
+
+        // 2. Imaging Modality (checkbox)
+        if (report["Imaging Modality"]) {
+            const modalityMap = {
+                "CT": "CT scan",
+                "MRI": "MRI"
+            };
+            document.querySelectorAll('input[name="modality"]').forEach(cb => {
+                const label = cb.parentElement.textContent.trim();
+                cb.checked = label === modalityMap[report["Imaging Modality"]];
+            });
+        }
+
         // IMP
         const impInputs = document.querySelectorAll(".imp-text input");
         const imp_T = impInputs[0], imp_N = impInputs[1], imp_M = impInputs[2];
@@ -163,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-// 使用示例
+        // 使用示例
         autoCheckStage("T", report.T_stage); // 勾選 T 分期
         autoCheckStage("N", report.N_stage); // 勾選 N 分期
         autoCheckStage("M", report.M_stage); // 勾選 M 分期
@@ -178,17 +198,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 LUL: "Left upper lobe",
                 LLL: "Left lower lobe",
             };
-            report.tumor_location
+
+            // 分割並清理輸入
+            const tumorLocations = report.tumor_location
                 .split(",")
-                .map(s => s.trim())
-                .forEach(key => {
-                    const label = locationMap[key];
-                    if (!label) return;
-                    document.querySelectorAll('input[name="location"]').forEach(input => {
-                        if (input.parentElement.textContent.trim() === label) input.checked = true;
-                    });
+                .map(s => s.trim().toUpperCase())
+                .filter(Boolean)
+                .map(s => {
+                    // 從中文格式提取 RUL/LUL/LLL...
+                    const matchBracket = s.match(/\((RUL|RML|RLL|LUL|LLL)\)/i);
+                    if (matchBracket) return matchBracket[1].toUpperCase();
+
+                    // 若是英文代碼開頭（例如 RUL 44mm），只取開頭代碼
+                    const matchPrefix = s.match(/^(RUL|RML|RLL|LUL|LLL)\b/i);
+                    if (matchPrefix) return matchPrefix[1].toUpperCase();
+
+                    return null;
+                })
+                .filter(Boolean); // 去除無效項
+
+            // 精準勾選對應肺葉
+            document.querySelectorAll('input[name="location"]').forEach(input => {
+                const label = input.parentElement.textContent.trim();
+                input.checked = false; // 重置狀態
+
+                tumorLocations.forEach(code => {
+                    const expectedLabel = locationMap[code];
+                    if (expectedLabel && label === expectedLabel) {
+                        input.checked = true;
+                    }
                 });
+            });
         }
+
+
 
         // Tumor size（只填文字框）
         const sizeRadios = document.querySelectorAll('input[name="size"]');
@@ -215,6 +258,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (otherFindings && report.other_findings) {
             otherFindings.value = report.other_findings;
         }
+
+        saveReport();
     })();
 
     // ==== 儲存：先驗證，通過才送 ====
@@ -246,8 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const mStage = Array.from(document.querySelectorAll('input[name="M"]:checked, input[name="M1"]:checked'))
             .map(cb => cb.parentElement.textContent.trim());
 
-        // Other findings
-        const otherFindings = document.querySelector("fieldset textarea")?.value || "";
+        // Other Findings
+        const otherFindings = document.getElementById("otherFinding")?.value || "";
+
 
         // IMP
         const impInputs = document.querySelectorAll(".imp-text input");
@@ -257,9 +303,9 @@ document.addEventListener("DOMContentLoaded", () => {
             M: impInputs[2]?.value || "",
         };
 
-        const lungRadsCategory = "";
+        const lungRadsCategory = localStorage.getItem('lungRadsCategory');
 
-        const parsedReport_text = localStorage.getItem("generatedReport_text");
+        const parsedReport_text = localStorage.getItem("lastObservation");
 
         const filename = `${recordId.value.trim()}_${imagingDate.value}.json`;
 
@@ -276,14 +322,14 @@ document.addEventListener("DOMContentLoaded", () => {
             lung_rads_category: lungRadsCategory,
             other_findings: otherFindings,
             imp,
-            condition: parsedReport_text,
+            input: parsedReport_text,
             filename
         };
 
         console.log("Saved JSON:", result);
 
         // ---- 傳到你的 Express 伺服器 ----
-        fetch("http://localhost:3001/save-result", {
+        fetch("http://172.20.10.2:3001/save-result", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(result),
@@ -293,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => console.error("存檔失敗：", err));
 
         // ---- 傳到 n8n webhook ----
-        fetch("http://localhost:5678/webhook/lung-report", {
+        fetch("http://172.20.10.2:5678/webhook/lung-report", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(result),
@@ -305,4 +351,91 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => console.log("成功傳送至 n8n:", data))
             .catch(error => console.error("傳送失敗:", error));
     });
+
+    function saveReport() {
+
+        // ---- 收集資料 ----
+        // Location（勾選 + Other 併入）
+        const tumorLocation = Array.from(
+            document.querySelectorAll('input[name="location"]:checked')
+        ).map(cb => cb.parentElement.textContent.trim());
+        const otherLoc = locationOtherInput?.value.trim();
+        if (otherLoc) tumorLocation.push(otherLoc);
+
+        // Size
+        let tumorSizeCm = "";
+        document.querySelectorAll('input[name="size"]').forEach(radio => {
+            if (radio.checked) {
+                const nextInput = radio.parentElement.querySelector('input[type="text"]');
+                tumorSizeCm = nextInput ? nextInput.value : radio.parentElement.textContent.trim();
+            }
+        });
+
+        // T / N / M
+        const tStage = Array.from(document.querySelectorAll('input[name="T"]:checked'))
+            .map(cb => cb.parentElement.textContent.trim());
+        const nStage = Array.from(document.querySelectorAll('input[name="N"]:checked'))
+            .map(cb => cb.parentElement.textContent.trim());
+        const mStage = Array.from(document.querySelectorAll('input[name="M"]:checked, input[name="M1"]:checked'))
+            .map(cb => cb.parentElement.textContent.trim());
+
+        // Other Findings
+        const otherFindings = document.getElementById("otherFinder")?.value || "";
+
+        // IMP
+        const impInputs = document.querySelectorAll(".imp-text input");
+        const imp = {
+            T: impInputs[0]?.value || "",
+            N: impInputs[1]?.value || "",
+            M: impInputs[2]?.value || "",
+        };
+
+        const lungRadsCategory = localStorage.getItem("lungRadsCategory");
+        const parsedReport_text = localStorage.getItem("lastObservation");
+
+        const filename = `${recordId.value.trim()}_${imagingDate.value}.json`;
+
+        const result = {
+            record_id: recordId.value.trim(),
+            patient_name: patientName.value.trim(),
+            patient_info: patientInfo.value.trim(),
+            imaging_date: imagingDate.value,
+            tumor_location: tumorLocation.join(", "),
+            tumor_size_cm: tumorSizeCm,
+            T_stage: tStage.join(", "),
+            N_stage: nStage.join(", "),
+            M_stage: mStage.join(", "),
+            lung_rads_category: lungRadsCategory,
+            other_findings: otherFindings,
+            imp,
+            input: parsedReport_text,
+            filename
+        };
+
+        console.log("Saved JSON:", result);
+
+        // ---- 傳到 Express 伺服器 ----
+        fetch("http://172.20.10.2:3001/save-before-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result),
+        })
+            .then(res => res.json())
+            .then(data => console.log("存檔結果：", data))
+            .catch(err => console.error("存檔失敗：", err));
+
+        // ---- 傳到 n8n webhook ----
+        fetch("http://172.20.10.2:5678/webhook/lung-report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result),
+        })
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not ok");
+                return response.json();
+            })
+            .then(data => console.log("成功傳送至 n8n:", data))
+            .catch(error => console.error("傳送失敗:", error));
+    }
+
 });

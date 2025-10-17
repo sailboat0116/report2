@@ -8,6 +8,7 @@ var dotenv = require('dotenv');
 var mysql = require('mysql2/promise');
 const cors = require("cors");
 
+
 dotenv.config();
 
 const indexRouter = require('./routes/index');
@@ -16,7 +17,11 @@ const usersRouter = require('./routes/users');
 const app = express();
 
 // 加入 CORS 中間件，允許所有來源跨域
-/*app.use(cors());*/
+app.use(cors({
+  origin: ['http://172.20.10.2:3001'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -52,6 +57,24 @@ app.post("/save-result", (req, res) => {
   });
 });
 
+// 儲存報告 API
+app.post("/save-before-result", (req, res) => {
+  const result = req.body;
+
+  const recordId = result.record_id || "unknown";
+  const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
+  const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
+  const filePath = path.join("C:", "Users", "sailboat", "before-case_data", fileName);
+
+  fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
+    if (err) {
+      console.error("寫檔失敗", err);
+      return res.status(500).json({ status: "error", message: err.message });
+    }
+    res.json({ status: "ok", path: filePath });
+  });
+});
+
 // ===== MySQL 連線池 =====
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -74,7 +97,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     // 呼叫 n8n workflow
-    const n8nResponse = await axios.post('http://localhost:5678/webhook/login', {
+    const n8nResponse = await axios.post('http://172.20.10.2:5678/webhook/login', {
       doctorId,
       password,
     });
@@ -129,7 +152,7 @@ app.use(function(err, req, res, next) {
 });
 
 // 監聽 port 3001
-app.listen(3001, () => {
+app.listen(3001, "0.0.0.0",() => {
   console.log("Server running at http://localhost:3001");
 });
 
