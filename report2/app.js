@@ -39,39 +39,86 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// 儲存報告 API
+
 app.post("/save-result", (req, res) => {
   const result = req.body;
-
   const recordId = result.record_id || "unknown";
   const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
-  const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
-  const filePath = path.join("C:", "Users", "sailboat", "case_data", fileName);
 
-  fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
+  const folderPath = path.join("C:", "Users", "sailboat", "case_data");
+
+  // 讀取資料夾內所有檔案
+  fs.readdir(folderPath, (err, files) => {
     if (err) {
-      console.error("寫檔失敗", err);
+      console.error("讀取資料夾失敗", err);
       return res.status(500).json({ status: "error", message: err.message });
     }
-    res.json({ status: "ok", path: filePath });
+
+    // 找出已有檔案最大序號
+    let maxNumber = 0;
+    files.forEach(file => {
+      const match = file.match(/^(\d{5})-/); // 檔名前五位數序號
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+
+    // 下一個序號
+    const nextNumber = (maxNumber + 1).toString().padStart(5, "0");
+
+    const fileName = `${nextNumber}-${recordId}_${imagingDate}.txt`;
+    const filePath = path.join(folderPath, fileName);
+
+    fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
+      if (err) {
+        console.error("寫檔失敗", err);
+        return res.status(500).json({ status: "error", message: err.message });
+      }
+      res.json({ status: "ok", path: filePath, filename: fileName });
+    });
   });
 });
+
 
 // 儲存報告 API
 app.post("/save-before-result", (req, res) => {
   const result = req.body;
-
   const recordId = result.record_id || "unknown";
   const imagingDate = result.imaging_date ? result.imaging_date.replace(/-/g, "") : "nodate";
-  const fileName = `${recordId}_${imagingDate}.txt`;  // 例如 1_20250818.json
-  const filePath = path.join("C:", "Users", "sailboat", "before-case_data", fileName);
 
-  fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
+  const folderPath = path.join("C:", "Users", "sailboat", "before-case_data");
+
+  // 讀取資料夾內所有檔案
+  fs.readdir(folderPath, (err, files) => {
     if (err) {
-      console.error("寫檔失敗", err);
+      console.error("讀取資料夾失敗", err);
       return res.status(500).json({ status: "error", message: err.message });
     }
-    res.json({ status: "ok", path: filePath });
+
+    // 找出已有檔案最大序號
+    let maxNumber = 0;
+    files.forEach(file => {
+      const match = file.match(/^(\d{5})-/); // 檔名前五位數序號
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+
+    // 下一個序號
+    const nextNumber = (maxNumber + 1).toString().padStart(5, "0");
+
+    const fileName = `${nextNumber}-${recordId}_${imagingDate}.txt`;
+    const filePath = path.join(folderPath, fileName);
+
+    fs.writeFile(filePath, JSON.stringify(result, null, 2), "utf8", (err) => {
+      if (err) {
+        console.error("寫檔失敗", err);
+        return res.status(500).json({ status: "error", message: err.message });
+      }
+      res.json({ status: "ok", path: filePath, filename: fileName });
+    });
   });
 });
 

@@ -211,7 +211,7 @@
         }
     });
 
-    // === 表單送出：顯示「生成中」，其餘由 report.js 覆寫／更新 resultEl ===
+    /* === 表單送出：顯示「生成中」，其餘由 report.js 覆寫／更新 resultEl ===
     document.getElementById('reportForm').addEventListener('submit', (e)=>{
         e.preventDefault();
         const text = obsEl.value.trim();
@@ -222,7 +222,7 @@
         resultBadge.textContent = '處理中';
         // 若 report.js 會更新結果，這裡不多做事；若沒有，保底轉存到 reportText
         // （建議在 report.js 生成後呼叫：localStorage.setItem('reportText', generatedText);）
-    });
+    });*/
 
     // === 複製觀察與結果 ===
     function copy(text){ navigator.clipboard.writeText(text || ''); toast('已複製'); }

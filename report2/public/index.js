@@ -1,5 +1,4 @@
 // index.js（自動填寫 + 驗證 + 送出）
-
 document.addEventListener("DOMContentLoaded", () => {
     // ==== 取得元素 ====
     const recordId    = document.getElementById("recordId");
@@ -188,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
         autoCheckStage("N", report.N_stage); // 勾選 N 分期
         autoCheckStage("M", report.M_stage); // 勾選 M 分期
 
-
         // Tumor Location
         if (report.tumor_location) {
             const locationMap = {
@@ -231,8 +229,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-
-
         // Tumor size（只填文字框）
         const sizeRadios = document.querySelectorAll('input[name="size"]');
         if (report.tumor_size_cm) {
@@ -251,7 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         }
-
 
         // Other findings
         const otherFindings = document.querySelector('textarea[placeholder="Enter other findings here..."]');
@@ -294,7 +289,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Other Findings
         const otherFindings = document.getElementById("otherFinding")?.value || "";
 
-
         // IMP
         const impInputs = document.querySelectorAll(".imp-text input");
         const imp = {
@@ -328,6 +322,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         console.log("Saved JSON:", result);
 
+        // 顯示「儲存中」提示
+        if (typeof toast === "function") {
+            toast("🕒 正在儲存中…");
+        } else {
+            alert("🕒 正在儲存中…");
+        }
+
         // ---- 傳到你的 Express 伺服器 ----
         fetch("http://172.20.10.2:3001/save-result", {
             method: "POST",
@@ -350,6 +351,13 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .then(data => console.log("成功傳送至 n8n:", data))
             .catch(error => console.error("傳送失敗:", error));
+
+        // ✅ 儲存成功提示
+        if (typeof toast === "function") {
+            toast("✅ 已成功儲存報告！");
+        } else {
+            alert("✅ 已成功儲存報告！");
+        }
     });
 
     function saveReport() {
@@ -380,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(cb => cb.parentElement.textContent.trim());
 
         // Other Findings
-        const otherFindings = document.getElementById("otherFinder")?.value || "";
+        const otherFindings = document.getElementById("otherFinding")?.value || "";
 
         // IMP
         const impInputs = document.querySelectorAll(".imp-text input");
@@ -423,19 +431,5 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(res => res.json())
             .then(data => console.log("存檔結果：", data))
             .catch(err => console.error("存檔失敗：", err));
-
-        // ---- 傳到 n8n webhook ----
-        fetch("http://172.20.10.2:5678/webhook/lung-report", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(result),
-        })
-            .then(response => {
-                if (!response.ok) throw new Error("Network response was not ok");
-                return response.json();
-            })
-            .then(data => console.log("成功傳送至 n8n:", data))
-            .catch(error => console.error("傳送失敗:", error));
     }
-
 });
