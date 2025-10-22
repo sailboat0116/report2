@@ -433,3 +433,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => console.error("存檔失敗：", err));
     }
 });
+
+// 安全版登出功能 + 確認視窗
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    if (confirm('確定要登出嗎？')) {
+        localStorage.removeItem('doctorAuth'); // 清除登入資訊
+        window.location.href = 'login.html';   // 跳轉回登入頁
+    }
+});
