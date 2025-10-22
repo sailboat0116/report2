@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>報告資料庫查詢</title>
+    <style>
+        :root{
+            --bg:#f7f8fa; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
+            --pri:#2563eb; --pri-100:#dbeafe; --ring:#93c5fd; --ok:#16a34a; --err:#dc2626;
+            --border:#e5e7eb;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans TC",sans-serif;
+            color:var(--text); background:linear-gradient(180deg,#f8fafc,#eef2f7 40%,#eef2f7);
+        }
+        .container{max-width:980px;margin:40px auto;padding:0 16px}
+        .card{
+            background:var(--card); border:1px solid var(--border); border-radius:16px;
+            box-shadow:0 8px 24px rgba(0,0,0,.06); overflow:hidden;
+        }
+        .header{
+            padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;
+        }
+        .logo{
+            width:36px;height:36px;display:grid;place-items:center;border-radius:10px;background:var(--pri-100);color:var(--pri);font-weight:700;
+        }
+        h1{font-size:18px; margin:0}
+        .muted{color:var(--muted); font-size:13px}
+        .content{padding:20px 24px}
+        .row{display:grid;grid-template-columns:1fr 1fr; gap:16px}
+        @media (max-width:768px){ .row{grid-template-columns:1fr} }
+        .field{display:flex; flex-direction:column; gap:8px}
+        label{font-size:14px; font-weight:600}
+        input[type="text"], input[type="date"]{
+            padding:12px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px;
+            outline:none; transition:border-color .15s, box-shadow .15s;
+        }
+        input:focus{
+            border-color:var(--ring); box-shadow:0 0 0 4px rgba(147,197,253,.35);
+        }
+        .actions{display:flex; gap:12px; margin-top:10px; flex-wrap:wrap}
+        button{
+            border:0; border-radius:10px; padding:12px 16px; font-weight:700; cursor:pointer; font-size:14px;
+            display:inline-flex; align-items:center; gap:8px;
+        }
+        .btn-primary{background:var(--pri); color:#fff}
+        .btn-secondary{background:#fff; color:var(--text); border:1px solid var(--border)}
+        .section-title{margin:18px 0 8px; font-size:14px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.06em}
+        .result{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; margin-top:14px}
+        table{width:100%; border-collapse:collapse; font-size:14px}
+        thead{background:#f8fafc}
+        th, td{padding:12px 14px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top}
+        .empty{padding:16px; color:var(--muted)}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <div class="logo">DB</div>
+            <div>
+                <h1>報告資料庫查詢</h1>
+                <div class="muted">支援日期範圍與關鍵字查詢，連動 n8n Webhook。</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="section-title">日期範圍查詢</div>
+            <div class="row">
+                <div class="field">
+                    <label for="dateFrom">開始日期</label>
+                    <input type="date" id="dateFrom" />
+                </div>
+                <div class="field">
+                    <label for="dateTo">結束日期</label>
+                    <input type="date" id="dateTo" />
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn-primary" id="btnSearch">🔎 查詢</button>
+                <button class="btn-secondary" id="btnReset">↺ 重設</button>
+            </div>
+
+            <div class="section-title">查詢結果</div>
+            <div class="result" id="result">
+                <div class="empty">尚未查詢，請先輸入條件並按「查詢」。</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const N8N_BASE = "http://172.20.10.2:5678";
+    const QUERY_EP = `${N8N_BASE}/webhook/query-reports`; // ⚠️ 改用正式 webhook 路徑
+
+    const resultBox = document.getElementById('result');
+
+    document.getElementById('btnSearch').addEventListener('click', async () => {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (!dateFrom && !dateTo) {
+            return showEmpty("請至少輸入一個日期。");
+        }
+
+        const payload = { dateFrom, dateTo };
+
+        try {
+            const resp = await fetch(QUERY_EP, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const text = await resp.text();
+            if (!resp.ok) throw new Error(`HTTP ${resp.status} ${text}`);
+
+            let data = text ? JSON.parse(text) : [];
+
+            // n8n 可能回傳 [{json:{...}}]
+            let rows = Array.isArray(data) ? data : (data.items || data.data || []);
+            if (rows.length && rows[0]?.json) rows = rows.map(x => x.json);
+
+            if (!rows.length) return showEmpty('未找到資料。');
+            renderTable(rows);
+        } catch (err) {
+            console.error(err);
+            showEmpty("查詢失敗：" + err.message);
+        }
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        resultBox.innerHTML = '<div class="empty">尚未查詢，請先輸入條件並按「查詢」。</div>';
+    });
+
+    function showEmpty(msg){
+        resultBox.innerHTML = `<div class="empty">${msg}</div>`;
+    }
+
+    function renderTable(items){
+        const rows = items.map((it, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td>${(it.created_at || '').slice(0,10)}</td>
+      <td>${it.tumor_location || ''}</td>
+      <td>${it.tumor_size_cm || ''}</td>
+      <td>${it.T_stage || ''}</td>
+      <td>${it.N_stage || ''}</td>
+      <td>${it.M_stage || ''}</td>
+      <td>${it.lung_rads_category || ''}</td>
+      <td>${it.other_findings || ''}</td>
+      <td>${it.report_text || ''}</td>
+    </tr>
+  `).join('');
+
+        resultBox.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>日期</th>
+          <th>腫瘤位置</th>
+          <th>腫瘤大小</th>
+          <th>T 分期</th>
+          <th>N 分期</th>
+          <th>M 分期</th>
+          <th>Lung-RADS</th>
+          <th>其他發現</th>
+          <th>報告內容</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+    }
+</script>
+</body>
+</html>
