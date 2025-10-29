@@ -29,7 +29,7 @@
         h1{font-size:18px; margin:0}
         .muted{color:var(--muted); font-size:13px}
         .content{padding:20px 24px}
-        .row{display:grid;grid-template-columns:1fr 1fr; gap:16px}
+        .row{display:grid;grid-template-columns:1fr 1fr 1fr; gap:16px}
         @media (max-width:768px){ .row{grid-template-columns:1fr} }
         .field{display:flex; flex-direction:column; gap:8px}
         label{font-size:14px; font-weight:600}
@@ -62,11 +62,29 @@
             <div class="logo">DB</div>
             <div>
                 <h1>報告資料庫查詢</h1>
-                <div class="muted">支援日期範圍與關鍵字查詢，連動 n8n Webhook。</div>
+                <div class="muted">支援病患資訊、日期範圍與關鍵字查詢，連動 n8n Webhook。</div>
             </div>
         </div>
 
         <div class="content">
+            <!-- 病患資訊輸入 -->
+            <div class="section-title">病患資訊查詢</div>
+            <div class="row">
+                <div class="field">
+                    <label for="patientInput">輸入</label>
+                    <input type="text" id="patientInput" placeholder="可輸入病症描述關鍵字" />
+                </div>
+                <div class="field">
+                    <label for="patientName">病患名稱</label>
+                    <input type="text" id="patientName" placeholder="Patient Name" />
+                </div>
+                <div class="field">
+                    <label for="patientInfo">病患資訊</label>
+                    <input type="text" id="patientInfo" placeholder="Patient Info" />
+                </div>
+            </div>
+
+            <!-- 日期區間 -->
             <div class="section-title">日期範圍查詢</div>
             <div class="row">
                 <div class="field">
@@ -93,19 +111,21 @@
 </div>
 
 <script>
-    const N8N_BASE = "http://172.20.10.2:5678";
-    const QUERY_EP = `${N8N_BASE}/webhook/query-reports`; // ⚠️ 改用正式 webhook 路徑
-
+    const QUERY_EP = "https://n8n.fcubiolab.com/webhook/query-reports"; // ⚠️ 改用正式 webhook 路徑
     const resultBox = document.getElementById('result');
 
     document.getElementById('btnSearch').addEventListener('click', async () => {
+        const patientInput = document.getElementById('patientInput').value;
+        const patientName = document.getElementById('patientName').value;
+        const patientInfo = document.getElementById('patientInfo').value;
         const dateFrom = document.getElementById('dateFrom').value;
         const dateTo = document.getElementById('dateTo').value;
-        if (!dateFrom && !dateTo) {
-            return showEmpty("請至少輸入一個日期。");
+
+        if (!patientInput && !patientName && !patientInfo && !dateFrom && !dateTo) {
+            return showEmpty("請至少輸入一個查詢條件。");
         }
 
-        const payload = { dateFrom, dateTo };
+        const payload = { patientInput, patientName, patientInfo, dateFrom, dateTo };
 
         try {
             const resp = await fetch(QUERY_EP, {
@@ -118,8 +138,6 @@
             if (!resp.ok) throw new Error(`HTTP ${resp.status} ${text}`);
 
             let data = text ? JSON.parse(text) : [];
-
-            // n8n 可能回傳 [{json:{...}}]
             let rows = Array.isArray(data) ? data : (data.items || data.data || []);
             if (rows.length && rows[0]?.json) rows = rows.map(x => x.json);
 
@@ -132,6 +150,9 @@
     });
 
     document.getElementById('btnReset').addEventListener('click', () => {
+        document.getElementById('patientInput').value = '';
+        document.getElementById('patientName').value = '';
+        document.getElementById('patientInfo').value = '';
         document.getElementById('dateFrom').value = '';
         document.getElementById('dateTo').value = '';
         resultBox.innerHTML = '<div class="empty">尚未查詢，請先輸入條件並按「查詢」。</div>';
@@ -143,39 +164,45 @@
 
     function renderTable(items){
         const rows = items.map((it, idx) => `
-    <tr>
-      <td>${idx + 1}</td>
-      <td>${(it.created_at || '').slice(0,10)}</td>
-      <td>${it.tumor_location || ''}</td>
-      <td>${it.tumor_size_cm || ''}</td>
-      <td>${it.T_stage || ''}</td>
-      <td>${it.N_stage || ''}</td>
-      <td>${it.M_stage || ''}</td>
-      <td>${it.lung_rads_category || ''}</td>
-      <td>${it.other_findings || ''}</td>
-      <td>${it.report_text || ''}</td>
-    </tr>
-  `).join('');
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${it.input || ''}</td>
+          <td>${it.patient_name || ''}</td>
+          <td>${it.patient_info || ''}</td>
+          <td>${(it.created_at || '').slice(0,10)}</td>
+          <td>${it.tumor_location || ''}</td>
+          <td>${it.tumor_size_cm || ''}</td>
+          <td>${it.T_stage || ''}</td>
+          <td>${it.N_stage || ''}</td>
+          <td>${it.M_stage || ''}</td>
+          <td>${it.lung_rads_category || ''}</td>
+          <td>${it.other_findings || ''}</td>
+          <td>${it.report_text || ''}</td>
+        </tr>
+      `).join('');
 
         resultBox.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>日期</th>
-          <th>腫瘤位置</th>
-          <th>腫瘤大小</th>
-          <th>T 分期</th>
-          <th>N 分期</th>
-          <th>M 分期</th>
-          <th>Lung-RADS</th>
-          <th>其他發現</th>
-          <th>報告內容</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>輸入</th>
+              <th>病患名稱</th>
+              <th>病患資訊</th>
+              <th>日期</th>
+              <th>腫瘤位置</th>
+              <th>腫瘤大小</th>
+              <th>T 分期</th>
+              <th>N 分期</th>
+              <th>M 分期</th>
+              <th>Lung-RADS</th>
+              <th>其他發現</th>
+              <th>報告內容</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
     }
 </script>
 </body>

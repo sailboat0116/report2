@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(err => console.error("存檔失敗：", err));
 
         // ---- 傳到 n8n webhook ----
-        fetch("http://172.20.10.2:5678/webhook/lung-report", {
+        fetch("https://n8n.fcubiolab.com/webhook/lung-report", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(result),

@@ -26,7 +26,7 @@ document.getElementById("reportForm").addEventListener("submit", async function 
     localStorage.setItem("lastObservation", obs);
 
     try {
-        const response = await fetch("http://172.20.10.2:5678/webhook/send-observation", {
+        const response = await fetch("https://n8n.fcubiolab.com/webhook/send-observation", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ observation: obs }),
